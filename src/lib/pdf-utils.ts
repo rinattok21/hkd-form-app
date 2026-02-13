@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import { PHOTO_BOX, FORM_FIELDS } from "./form-fields";
+import { PHOTO_BOX, SIGNATURE_POSITIONS, FORM_FIELDS } from "./form-fields";
 
 export type FormData = Record<string, string>;
 
@@ -83,8 +83,30 @@ export async function fillPdfForm(
   }
 
   // Add signature image if provided
-  // Note: signature positions may need adjustment based on form layout
-  // Currently not placing signature as the form has signature fields handled differently
+  if (images.signature) {
+    try {
+      const sigBytes = dataUrlToUint8Array(images.signature);
+      const sigType = getImageType(images.signature);
+
+      let sigImage;
+      if (sigType === "png") {
+        sigImage = await pdfDoc.embedPng(sigBytes);
+      } else {
+        sigImage = await pdfDoc.embedJpg(sigBytes);
+      }
+
+      const page = pdfDoc.getPages()[0];
+      const pos = SIGNATURE_POSITIONS.student;
+      page.drawImage(sigImage, {
+        x: pos.x,
+        y: pos.y,
+        width: pos.width,
+        height: pos.height,
+      });
+    } catch (err) {
+      console.error("Error embedding signature:", err);
+    }
+  }
 
   // Save the PDF
   const filledPdfBytes = await pdfDoc.save({ updateFieldAppearances: false });
@@ -176,14 +198,14 @@ export function validateImage(
             maxSizeMB: 2,
             maxSizeBytes: 2 * 1024 * 1024,
             acceptedTypes: ["image/jpeg", "image/png", "image/jpg"],
-            minWidth: 100,
-            minHeight: 30,
-            maxWidth: 1500,
-            maxHeight: 500,
+            minWidth: 50,
+            minHeight: 20,
+            maxWidth: 2000,
+            maxHeight: 1000,
             recommendedWidth: 400,
             recommendedHeight: 150,
-            aspectRatioMin: 1.5,
-            aspectRatioMax: 6.0,
+            aspectRatioMin: 0.5,
+            aspectRatioMax: 8.0,
           };
 
     // Check file type
