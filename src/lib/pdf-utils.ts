@@ -2,6 +2,9 @@ import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { PHOTO_BOX, SIGNATURE_POSITIONS, FORM_FIELDS } from "./form-fields";
 
+// Base path for public assets (needed for GitHub Pages subpath deployment)
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export type FormData = Record<string, string>;
 
 export interface ImageData {
@@ -19,7 +22,7 @@ export async function fillPdfForm(
   images: ImageData
 ): Promise<Uint8Array> {
   // Fetch the blank PDF template from public folder
-  const response = await fetch("/blank-form.pdf");
+  const response = await fetch(`${BASE_PATH}/blank-form.pdf`);
   const pdfBytes = await response.arrayBuffer();
 
   // Load the PDF
@@ -156,7 +159,7 @@ export function downloadPdf(pdfBytes: Uint8Array, filename: string) {
  */
 export function downloadBlankForm() {
   const a = document.createElement("a");
-  a.href = "/blank-form.pdf";
+  a.href = `${BASE_PATH}/blank-form.pdf`;
   a.download = "HSTU_Karate_Dojo_Form_Blank.pdf";
   document.body.appendChild(a);
   a.click();
